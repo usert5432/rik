@@ -1,0 +1,82 @@
+#!/usr/bin/python
+
+import logging
+import os
+
+from rik.parsers import create_rik_parser
+from rik.funcs import (
+    handle_file, walk_filesystem, print_summary, select_integrity,
+    DEFAULT_EXCLUDES
+)
+
+from rik.path_constraints import GlobConstraint, FileSizeConstraint
+
+def parse_constraints(cmdargs):
+    constraints =  [ GlobConstraint(x, True) for x in DEFAULT_EXCLUDES ]
+    constraints += [ GlobConstraint(x, True) for x in cmdargs.excludes ]
+
+    dir_constraints  = constraints
+    file_constraints = constraints + [
+        FileSizeConstraint.from_string(x) for x in cmdargs.size_constraints
+    ]
+
+    return (dir_constraints, file_constraints)
+
+def parse_verbosity(cmdargs):
+    level     = logging.INFO
+    verbosity = cmdargs.verbose - cmdargs.quiet
+
+    if verbosity == 0:
+        level = logging.INFO
+    elif verbosity >= 1:
+        level = logging.DEBUG
+    elif verbosity == -1:
+        level = logging.WARN
+    elif verbosity <= -2:
+        level = logging.ERROR
+
+    logging.basicConfig(level = level)
+
+    return verbosity
+
+def main():
+    parser  = create_rik_parser()
+    cmdargs = parser.parse_args()
+
+    verbosity = parse_verbosity(cmdargs)
+
+    writable = (cmdargs.cmd in ['create', 'prune'])
+    recalc   = (cmdargs.cmd == 'create') and cmdargs.recalc
+    create   = (cmdargs.cmd == 'create')
+    verify   = (cmdargs.cmd == 'verify')
+    prune    = (cmdargs.cmd == 'prune')
+    target   = os.path.realpath(cmdargs.target)
+
+    integrity = select_integrity(
+        cmdargs.integrity, writable, recalc, verbosity, cmdargs.iargs
+    )
+
+    dir_constraints, file_constraints = parse_constraints(cmdargs)
+
+    if os.path.isfile(target):
+        root = os.path.dirname(target)
+        integrity.load(root)
+
+        result_dict = {}
+
+        handle_file(
+            os.path.basename(target), target,
+            integrity, file_constraints, result_dict, create, verify
+        )
+    else:
+        result_dict = walk_filesystem(
+            target, integrity, dir_constraints, file_constraints,
+            create, prune, verify
+        )
+
+    if verbosity >= 0:
+        print_summary(result_dict)
+
+if __name__ == '__main__':
+    main()
+

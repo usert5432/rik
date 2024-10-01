@@ -1,0 +1,8 @@
+
+RESULT_OK       = 0
+RESULT_NEW      = 1
+RESULT_DEL      = 2
+RESULT_SKIP     = 3
+RESULT_ERROR    = -1
+RESULT_MISMATCH = -2
+
