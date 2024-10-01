@@ -1,0 +1,193 @@
+.TH RIK 1 rik-VERSION
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\" Section:NAME
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.SH NAME
+rik \- Recursive Integrity Keeper
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\" Section:SYNOPSIS
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.SH SYNOPSIS
+.B rik
+.B COMMAND
+.RB [ OPTION... ]
+.I TARGET
+[--]
+.RB [ ARGUMENT... ]
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\" Section:DESCRIPTION
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.SH DESCRIPTION
+.B rik
+(Recursive Integrity Keeper) is a tool for creating, verifying, and managing
+file integrity sums. rik operates recursively on directory trees, allowing one
+to process entire volumes at once, but can also handle individual files.
+At this moment, rik supports two main types of integrity checks:
+.IP \[bu] 2
+Reed-Solomon error correction codes (using par2cmdline)
+.IP \[bu]
+Simple checksums (e.g., SHA256, MD5)
+.PP
+For Reed-Solomon codes, rik acts as a convenience wrapper around the
+.I par2cmdline
+application. In this mode, it scans the target directory and uses
+.I par2cmdline
+to create or verify Reed-Solomon codes for each found file.
+In this mode of operation, the Reed-Solomon codes are created and stored
+in
+.I .par2
+subdirectories, located next to each processed file.
+.PP
+For simple integrity checks, rik can use builtin `python` routines to calculate
+and verify file hashes. In this mode, it operates similar to the standard
+unix tools like
+.I md5sum
+or
+.I sha256sum
+etc. The main difference is that rik automatically discovers files and stores
+their checksums in
+.I .rik_HASH
+created in each processed directory.
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\" Section:COMMANDS
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.SH COMMANDS
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.TP
+.BR create
+Create integrity information for the specified target.
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.TP
+.BR verify
+Verify the integrity of the specified target.
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.TP
+.BR prune
+Delete obsolete integrity information.
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\" Section:OPTIONS
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.SH OPTIONS
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.TP
+.BR \-v ", " \-\-verbose
+Increase verbosity. Can be used multiple times for increased verbosity.
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.TP
+.BR \-q ", " \-\-quiet
+Decrease verbosity. Can be used multiple times for decreased verbosity.
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.TP
+.BR \-i ", " \-\-integrity " " \fIINTEGRITY\fR
+Specify the integrity method to use. Choices
+.RS
+.TP
+.I par2
+for Reed-Solomon codes.
+.TP
+.I sha256
+(or
+.I md5
+or any other supported hash algorithm) for simple hash-based integrity.
+.RE
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.TP
+.BR \-s ", " \-\-size " " \fISIZE\fR
+Add a size constraint. Can be specified multiple times.
+.I SIZE
+is a concatenation of an operator [>, >=, <, <=, ==], numerical size, and a
+suffix (b for byte, k for kibibyte, m for mebibyte, and g for gibibyte).
+For example,
+.I <100M
+will select only files smaller than 100 MiB.
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.TP
+.BR \-e ", " \-\-exclude " " \fIPATTERN\fR
+Exclude files or directories matching the specified glob pattern.
+Can be specified multiple times.
+The glob expression will be matched against each part of the path.
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.TP
+.BR \-\-overwrite
+Recalculate and overwrite existing integrity information (only works with the
+.B create
+command).
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\" Section:ARGUMENTS
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.SH ARGUMENTS
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.I TARGET
+The file or directory to process.
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.I INTEGRITY_ARGS
+Additional arguments for the specified integrity method. For par2, these are
+passed directly to par2cmdline.
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\" Section:EXAMPLES
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.SH EXAMPLES
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.P
+Compute Reed-Solomon codes recursively for all files a directory:
+.RS
+rik create -i par2
+.I PATH_TO_DIR
+.RE
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.P
+Calculate SHA256 checksums for a file:
+.RS
+rik create -i sha256
+.I PATH_TO_FILE
+.RE
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.P
+Verify integrity using previously created Reed-Solomon codes:
+.RS
+rik verify -i par2
+.I PATH
+.RE
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.P
+Verify integrity using previously created SHA256 checksums:
+.RS
+rik verify -i sha256
+.I PATH
+.RE
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.P
+Create Reed-Solomon codes with 10% redundancy:
+.RS
+rik create -i par2
+.I PATH
+-- -r10
+.RE
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.P
+Compute Reed-Solomon codes only for files smaller than 100 MB:
+.RS
+rik create -i par2 -s '<100M'
+.I PATH
+.RE
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.P
+Exclude
+.I .git
+directories when creating codes:
+.RS
+rik create -i par2 --exclude .git
+.I PATH
+.RE
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+\" Section:SEE ALSO
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.SH SEE ALSO
+.BR par2 (1),
+.BR par2create (1),
+.BR par2verify (1),
+.BR sha256sum (1),
+.BR md5sum (1)
+.PP
+\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
