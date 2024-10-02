@@ -32,7 +32,8 @@ class Par2Integrity(Integrity):
         result = shutil.which(PAR2_CMDNAME)
         if result is None:
             raise RuntimeError(
-                f"Par2 program '{PAR2_CMDNAME}' is not found in system $PATH"
+                f"par2 application '{PAR2_CMDNAME}' is not found in system"
+                " $PATH. Make sure that par2 is installed"
             )
 
     def _get_par2_archive_name(self, file_name):
