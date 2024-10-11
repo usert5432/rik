@@ -45,9 +45,6 @@ Alternatively, `rik` can be installed from the PyPI repository:
 python3 -m pip install rik
 ```
 
-**Note:** PyPI installation is currently in progress. Please check back later
-if this method doesn't work.
-
 
 ## Usage
 
